@@ -1,5 +1,6 @@
 package com.maksim.procurement_service.service.impl;
 
+import com.maksim.procurement_service.configuration.EmailService;
 import com.maksim.procurement_service.configuration.ProductClient;
 import com.maksim.procurement_service.configuration.WarehouseClient;
 import com.maksim.procurement_service.domain.*;
@@ -40,6 +41,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final ProductClient productClient;
     private final NotificationSender notificationSender;
     private final PurchaseOrderMapper purchaseOrderMapper;
+    private final EmailService emailService;
     private static final Logger logger = LogManager.getLogger(PurchaseOrderServiceImpl.class);
 
 
@@ -167,6 +169,14 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         String supplierEmail = po.getSupplier().getContacts().isEmpty()
                 ? ""
                 : po.getSupplier().getContacts().get(0).getEmail();
+
+        if (!supplierEmail.isBlank()) {
+            emailService.sendPurchaseOrderEmail(
+                    supplierEmail,
+                    pdfBytes,
+                    po.getId()
+            );
+        }
 
         logger.info("Purchase order id={} submitted successfully", po.getId());
         return new PurchaseOrderSubmitResponse(po.getId(), supplierEmail, pdfBytes);

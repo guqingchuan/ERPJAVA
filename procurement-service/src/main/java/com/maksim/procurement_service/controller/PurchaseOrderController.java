@@ -59,7 +59,7 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(result);
     }
 
-    @CheckSecurity(roles = {"ADMIN","WAREHOUSE","PROCUREMENT"})
+
     @GetMapping("/{id}/confirm")
     public ResponseEntity<String> confirmPurchaseOrder(@PathVariable Long id) {
         PurchaseOrder po = purchaseOrderRepository.findById(id)
@@ -74,7 +74,7 @@ public class PurchaseOrderController {
 
         return ResponseEntity.ok("Purchase order confirmed successfully");
     }
-    @CheckSecurity(roles = {"ADMIN","WAREHOUSE","PROCUREMENT"})
+
     @GetMapping("/{id}/close")
     public ResponseEntity<String> closePurchaseOrder(@PathVariable Long id) {
         PurchaseOrder po = purchaseOrderRepository.findById(id)
