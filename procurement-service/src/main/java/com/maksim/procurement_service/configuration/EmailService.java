@@ -12,6 +12,8 @@ public class EmailService {
     private final JavaMailSender mailSender;
     @Value("${base.url}")
     private String BaseUrl;
+    @Value("${email.url}")
+    private String emailUrl;
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -30,8 +32,8 @@ public class EmailService {
             helper.setSubject("Purchase Order #" + orderId);
 
             // Linkovi za confirm i close
-            String confirmUrl = BaseUrl + "/purchase-orders/" + orderId + "/confirm";
-            String closeUrl = BaseUrl + "/purchase-orders/" + orderId + "/close";
+            String confirmUrl = emailUrl + "/purchase-orders/" + orderId + "/confirm";
+            String closeUrl = emailUrl + "/purchase-orders/" + orderId + "/close";
 
             // HTML sadržaj email-a
             String htmlContent = """

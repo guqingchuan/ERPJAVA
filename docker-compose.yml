@@ -14,10 +14,17 @@ services:
       - "5432:5432"
     networks:
       - erp-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 5s
+      retries: 10
+      start_period: 5s
 
   # === User Service ===
   user-service:
     image: dimitrijevic175/user-service:latest
+#    build:
+#      context: ./user-service
     container_name: user-service
     ports:
       - "${USER_SERVICE_PORT}:8080"
@@ -27,29 +34,35 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${USER_SERVICE_DB_PASS}
       OAUTH_JWT_SECRET: ${USER_SERVICE_JWT_SECRET}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - erp-network
 
   # === Product Service ===
   product-service:
     image: dimitrijevic175/product-service:latest
+#    build:
+#      context: ./product-service
     container_name: product-service
     ports:
-      - "${PRODUCT_SERVICE_PORT}:8081"
+      - "${PRODUCT_SERVICE_PORT}:8080"
     environment:
       SPRING_DATASOURCE_URL: ${PRODUCT_SERVICE_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${PRODUCT_SERVICE_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${PRODUCT_SERVICE_DB_PASS}
       OAUTH_JWT_SECRET: ${PRODUCT_SERVICE_JWT_SECRET}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - erp-network
 
   # === Procurement Service ===
   procurement-service:
     image: dimitrijevic175/procurement-service:latest
+#    build:
+#      context: ./procurement-service
     container_name: procurement-service
     ports:
       - "${PROCUREMENT_SERVICE_PORT}:8082"
@@ -62,23 +75,26 @@ services:
       OAUTH_JWT_SECRET: ${PROCUREMENT_SERVICE_JWT_SECRET}
       MAIL_HOST: ${MAIL_HOST}
       MAIL_PORT: ${MAIL_PORT}
-      MAIL_USERNAME: ${MAIL_USER}
-      MAIL_PASSWORD: ${MAIL_PASS}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     depends_on:
       - db
       - product-service
       - warehouse-service
     volumes:
       - ./pdfs:/app/pdfs
+      - ./procurement-service/src/main/resources/application.properties:/app/application.properties
     networks:
       - erp-network
 
   # === Sales Service ===
   sales-service:
     image: dimitrijevic175/sales-service:latest
+#    build:
+#      context: ./sales-service
     container_name: sales-service
     ports:
-      - "${SALES_SERVICE_PORT}:8083"
+      - "${SALES_SERVICE_PORT}:8080"
     environment:
       SPRING_DATASOURCE_URL: ${SALES_SERVICE_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${SALES_SERVICE_DB_USER}
@@ -94,9 +110,11 @@ services:
   # === Warehouse Service ===
   warehouse-service:
     image: dimitrijevic175/warehouse-service:latest
+#    build:
+#      context: ./warehouse-service
     container_name: warehouse-service
     ports:
-      - "${WAREHOUSE_SERVICE_PORT}:8084"
+      - "${WAREHOUSE_SERVICE_PORT}:8080"
     environment:
       SPRING_DATASOURCE_URL: ${WAREHOUSE_SERVICE_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${WAREHOUSE_SERVICE_DB_USER}
