@@ -1,11 +1,13 @@
+version: "3.8"
+
 services:
-  # Jedinstvena baza za ceo sistem
+  # === Jedinstvena baza za ceo sistem ===
   db:
     image: postgres:latest
     container_name: erp-postgres
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=admin
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./init-scripts:/docker-entrypoint-initdb.d
     ports:
@@ -13,86 +15,95 @@ services:
     networks:
       - erp-network
 
-  # 1. User Service
+  # === User Service ===
   user-service:
-    build: ./user-service
+    image: dimitrijevic175/user-service:latest
     container_name: user-service
     ports:
-      - "8080:8080"
+      - "${USER_SERVICE_PORT}:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/user_service_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=admin
+      SPRING_DATASOURCE_URL: ${USER_SERVICE_DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${USER_SERVICE_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${USER_SERVICE_DB_PASS}
+      OAUTH_JWT_SECRET: ${USER_SERVICE_JWT_SECRET}
     depends_on:
       - db
     networks:
       - erp-network
 
-  # 2. Product Service
+  # === Product Service ===
   product-service:
-    build: ./product-service
+    image: dimitrijevic175/product-service:latest
     container_name: product-service
     ports:
-      - "8081:8081"
+      - "${PRODUCT_SERVICE_PORT}:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/product_service_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=admin
+      SPRING_DATASOURCE_URL: ${PRODUCT_SERVICE_DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${PRODUCT_SERVICE_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PRODUCT_SERVICE_DB_PASS}
+      OAUTH_JWT_SECRET: ${PRODUCT_SERVICE_JWT_SECRET}
     depends_on:
       - db
     networks:
       - erp-network
 
-  # 3. Procurement Service
+  # === Procurement Service ===
   procurement-service:
-    build: ./procurement-service
+    image: dimitrijevic175/procurement-service:latest
     container_name: procurement-service
     ports:
-      - "8082:8082"
+      - "${PROCUREMENT_SERVICE_PORT}:8082"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/procurement_service_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - PRODUCT_SERVICE_URL=http://product-service:8081
-      - WAREHOUSE_SERVICE_URL=http://warehouse-service:8084
+      SPRING_DATASOURCE_URL: ${PROCUREMENT_SERVICE_DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${PROCUREMENT_SERVICE_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PROCUREMENT_SERVICE_DB_PASS}
+      PRODUCT_SERVICE_URL: ${PROCUREMENT_SERVICE_PRODUCT_URL}
+      WAREHOUSE_SERVICE_URL: ${PROCUREMENT_SERVICE_WAREHOUSE_URL}
+      OAUTH_JWT_SECRET: ${PROCUREMENT_SERVICE_JWT_SECRET}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USER}
+      MAIL_PASSWORD: ${MAIL_PASS}
     depends_on:
       - db
       - product-service
       - warehouse-service
     volumes:
-      - ./pdfs:/app/pdfs  # mapira host folder ERP/pdfs na /app/pdfs unutar kontejnera
+      - ./pdfs:/app/pdfs
     networks:
       - erp-network
 
-  # 4. Sales Service
+  # === Sales Service ===
   sales-service:
-    build: ./sales-service
+    image: dimitrijevic175/sales-service:latest
     container_name: sales-service
     ports:
-      - "8083:8083"
+      - "${SALES_SERVICE_PORT}:8083"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/sales_service_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - WAREHOUSE_SERVICE_URL=http://warehouse-service:8084
+      SPRING_DATASOURCE_URL: ${SALES_SERVICE_DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${SALES_SERVICE_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SALES_SERVICE_DB_PASS}
+      WAREHOUSE_SERVICE_URL: ${SALES_SERVICE_WAREHOUSE_URL}
+      OAUTH_JWT_SECRET: ${SALES_SERVICE_JWT_SECRET}
     depends_on:
       - db
       - warehouse-service
     networks:
       - erp-network
 
-  # 5. Warehouse Service
+  # === Warehouse Service ===
   warehouse-service:
-    build: ./warehouse-service
+    image: dimitrijevic175/warehouse-service:latest
     container_name: warehouse-service
     ports:
-      - "8084:8084"
+      - "${WAREHOUSE_SERVICE_PORT}:8084"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/warehouse_service_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - PRODUCT_SERVICE_URL=http://product-service:8081
-      - PROCUREMENT_SERVICE_URL=http://procurement-service:8082
+      SPRING_DATASOURCE_URL: ${WAREHOUSE_SERVICE_DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${WAREHOUSE_SERVICE_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${WAREHOUSE_SERVICE_DB_PASS}
+      PRODUCT_SERVICE_URL: ${WAREHOUSE_SERVICE_PRODUCT_URL}
+      PROCUREMENT_SERVICE_URL: ${WAREHOUSE_SERVICE_PROCUREMENT_URL}
+      OAUTH_JWT_SECRET: ${WAREHOUSE_SERVICE_JWT_SECRET}
     depends_on:
       - db
       - product-service
